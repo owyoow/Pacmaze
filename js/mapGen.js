@@ -242,6 +242,14 @@ Pacmaze.MapGen.prototype.addEnemyBox = function ()
             {
                 this.map[yStart + column][xStart + row] = 1;
             }
+            else if(column === 1 && row === 3)
+            {
+                this.map[yStart + column][xStart + row] = 2;
+            }
+            else if(column === 2 && row > 1 && row < 6)
+            {
+                this.map[yStart + column][xStart + row] = 2;
+            }
             else
             {
                 this.map[yStart + column][xStart + row] = 0;

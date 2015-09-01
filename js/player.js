@@ -6,10 +6,8 @@ Pacmaze.Player = function (game, x, y)
     this.game.add.existing(this);
     
     this.anchor.setTo(0.5);
-    //this.game.physics.enable(this, Phaser.Physics.ARCADE);
-    
+
     this.moveTarget = new Phaser.Point();
-    this.lastTarget = this.moveTarget;
     this.isMoving = false;
     
     // direction 0 = none, 2 = up, 4 = left, 6 = right, 8 = down
@@ -58,8 +56,7 @@ Pacmaze.Player.prototype.update = function ()
     
     if(this.moveTarget.isZero())
     {
-        
-        
+        this.isMoving = false;
         var target = null;
         if(this.currentDirection !== 0)
         {
@@ -76,17 +73,10 @@ Pacmaze.Player.prototype.update = function ()
                 {
                     this.currentDirection = 0;
                     this.desiredDirection = 0;
-                    // this.body.velocity.x = 0;
-                    // this.body.velocity.y = 0;
                 }
             }
             else
             {
-                // if(!this.lastTarget.isZero())
-                // {
-                //     this.x = this.lastTarget.x;
-                //     this.y = this.lastTarget.y;
-                // }
                 target = this.getNextMoveTarget(this.desiredDirection);
                 
                 if(target !== null)
@@ -107,8 +97,6 @@ Pacmaze.Player.prototype.update = function ()
                     {
                         this.currentDirection = 0;
                         this.desiredDirection = 0;
-                        // this.body.velocity.x = 0;
-                        // this.body.velocity.y = 0;
                     }
                 }
             }
@@ -126,15 +114,12 @@ Pacmaze.Player.prototype.update = function ()
             else
             {
                 this.desiredDirection = 0;
-                // this.body.velocity.x = 0;
-                // this.body.velocity.y = 0;
-                
             }
         }
     }
     else
     {
-        //this.game.physics.arcade.moveToXY(this, this.moveTarget.x, this.moveTarget.y, 100);
+        this.isMoving = true;
         if(this.currentDirection === 4)
         {
             this.x -= this.speed;
@@ -155,7 +140,6 @@ Pacmaze.Player.prototype.update = function ()
 
         if(distance < this.speed)
         {
-            this.lastTarget = this.moveTarget.clone();
             this.x = this.moveTarget.x;
             this.y = this.moveTarget.y;
             this.moveTarget.setTo(0, 0);
