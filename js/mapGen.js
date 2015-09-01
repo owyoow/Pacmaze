@@ -13,6 +13,8 @@ Pacmaze.MapGen = function (game)
     // down, right, up, left
     this.cardinals = [new Phaser.Point(0, 1), new Phaser.Point(1, 0), 
                       new Phaser.Point(0, -1), new Phaser.Point(-1, 0)];
+    
+    this.cageRect;
 };
 
 Pacmaze.MapGen.prototype.createMaze = function (width, height)
@@ -44,6 +46,7 @@ Pacmaze.MapGen.prototype.createMaze = function (width, height)
     this.connectEdges();
     this.connectDeadEnds();
     this.addExtraConnectors();
+    this.addEnemyBox();
     
     return this.converToCSV(this.map);
 };
@@ -109,6 +112,7 @@ Pacmaze.MapGen.prototype.canGrow = function (pos, direction)
     return this.map[pos.y + direction.y * 2][pos.x + direction.x * 2] !== 0;
 };
 
+// loop through the map array and make the outer loop all floors so you can walk around the level
 Pacmaze.MapGen.prototype.connectEdges = function()
 {
     for(var column = 1; column < this.mapHeight - 1; column++)
@@ -126,6 +130,8 @@ Pacmaze.MapGen.prototype.connectEdges = function()
     }
 };
 
+// loop through the map array and if there is a floor tile with 3 wall tiles surrounding it, 
+// make one of the walls a floor to connect it to the rest of the level
 Pacmaze.MapGen.prototype.connectDeadEnds = function ()
 {
     var done = false;
@@ -140,6 +146,7 @@ Pacmaze.MapGen.prototype.connectDeadEnds = function ()
                 var connectors = [];
                 var exists = 0;
                 
+                // check how many surrounding walls are floors
                 this.cardinals.forEach(function(dir)
                 {
                     if(this.map[y + dir.y][x + dir.x] === 0)
@@ -148,19 +155,23 @@ Pacmaze.MapGen.prototype.connectDeadEnds = function ()
                     }
                     else
                     {
+                        // if it is not a floor add the position to the possible connectors
                         connectors.push(new Phaser.Point(x + dir.x, y + dir.y));
                     }
                 }, this);
                 
+                // if more than one connected tile is a floor this is not a dead end so no action is needed
                 if(exists !== 1) continue;
                 done = false;
                 
                 var foundPos = false;
                 while(!foundPos)
                 {
+                    // get a random side to connect to
                     var nr = this.game.rnd.between(0, connectors.length - 1);
                     var pos = connectors[nr];
-
+                    
+                    // check if the connected tile is inside the map. if it is outside delete it
                     if(pos.x > 0 && pos.x < this.mapWidth - 1 && pos.y > 0 && pos.y < this.mapHeight - 1)
                     {
                         foundPos = true;
@@ -209,6 +220,36 @@ Pacmaze.MapGen.prototype.addExtraConnectors = function ()
     {
         this.map[possibleConnectors[i].y][possibleConnectors[i].x] = 0;
     }
+};
+
+Pacmaze.MapGen.prototype.addEnemyBox = function ()
+{
+    var xStart = Math.floor(this.mapWidth * 0.5) - 3;
+    var yStart = Math.floor(this.mapHeight * 0.5) - 3;
+    for(var column = 0; column < 5; column++)
+    {
+        for(var row = 0; row < 7; row++)
+        {
+            if(column === 1 && row > 0 && row < 6 && row !== 3)
+            {
+                this.map[yStart + column][xStart + row] = 1;
+            }
+            else if(column === 2 && (row === 1 || row === 5))
+            {
+                this.map[yStart + column][xStart + row] = 1;
+            }
+            else if(column === 3 && row > 0 && row < 6)
+            {
+                this.map[yStart + column][xStart + row] = 1;
+            }
+            else
+            {
+                this.map[yStart + column][xStart + row] = 0;
+            }
+        }
+    }
+    
+    this.cageRect = new Phaser.Rectangle(xStart, yStart, 7, 5);
 };
 
 // this converts the mapArray, which is an array of arrays to a CSV string we can use to load a tilemap
