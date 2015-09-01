@@ -2,6 +2,8 @@
 
 var Pacmaze = {
     
+    TILESIZE: 32,
+    SEED: 0
     
 };
 

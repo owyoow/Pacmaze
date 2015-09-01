@@ -7,6 +7,14 @@ Pacmaze.Preload = function (game)
 
 Pacmaze.Preload.prototype.preload = function ()
 {
+    //this.load.image('tiles', 'assets/images/smallTiles.png');
+    this.load.image('tiles', 'assets/images/tiles32px.png');
+    
+    // getting a random seed, but also use a variable to set the seed yourself if you want
+    // has to be moved to the menu in the future
+    Pacmaze.SEED = this.rnd.integerInRange(0, 9999999999);
+    //Pacmaze.SEED = 5255887299;
+    this.rnd.sow([(Pacmaze.SEED).toString()]);
     
     // this is used for the framerate counter
     this.time.advancedTiming = true;

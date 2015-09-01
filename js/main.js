@@ -2,7 +2,7 @@
 
 window.onload = function ()
 {
-    var game = new Phaser.Game(640, 480, Phaser.CANVAS, 'gameContainer');
+    var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'gameContainer');
     
     // load all gamestates
     game.state.add('boot', Pacmaze.Boot);
