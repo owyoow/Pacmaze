@@ -13,7 +13,7 @@ Pacmaze.Game.prototype.create = function ()
     this.gameInput.setupInput();
     
     this.mapGen = new Pacmaze.MapGen(this);
-    var mapString = this.mapGen.createMaze(25, 17);
+    var mapString = this.mapGen.createMaze(25, 17, 4);
     this.load.tilemap('map', null, mapString, Phaser.Tilemap.CSV);
     
     this.map = this.add.tilemap('map', Pacmaze.TILESIZE, Pacmaze.TILESIZE);
@@ -31,8 +31,8 @@ Pacmaze.Game.prototype.create = function ()
         for(var row = 0; row < this.mapGen.mapWidth; row++)
         {
             // checking if the tile is a floor tile and if it is not inside the enemy cage
-            if(this.mapGen.map[column][row] === 0 && (row < this.mapGen.cageRect.x + 1 || row > this.mapGen.cageRect.x + this.mapGen.cageRect.width - 2 ||
-              column < this.mapGen.cageRect.y + 1 || column > this.mapGen.cageRect.y + this.mapGen.cageRect.height - 2))
+            if(this.mapGen.map[column][row] === 0)// && (row < this.mapGen.cageRect.x + 1 || row > this.mapGen.cageRect.x + this.mapGen.cageRect.width - 2 ||
+             // column < this.mapGen.cageRect.y + 1 || column > this.mapGen.cageRect.y + this.mapGen.cageRect.height - 2))
             {
                 var foodPos = Pacmaze.TILETOWORLDPOS(row, column);
                 var food = this.add.sprite(foodPos.x, foodPos.y, 'food');
@@ -43,23 +43,41 @@ Pacmaze.Game.prototype.create = function ()
     }
     
     this.enemies = this.add.group();
-    this.eFirstPos = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y + 1);
-    this.eBlue = new Pacmaze.EBlue(this, this.eFirstPos.x, this.eFirstPos.y, 1000);
-    this.enemies.add(this.eBlue);
+    // this.eFirstPos = Pacmaze.TILETOWORLDPOS(this.mapGen.enemyBoxes[0].x, this.mapGen.enemyBoxes[0].y);
+    // this.eBlue = new Pacmaze.EBlue(this, this.eFirstPos.x, this.eFirstPos.y, 1000);
+    // this.enemies.add(this.eBlue);
     
-    this.eSecondPos = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y + 2);
-    this. blue2 = new Pacmaze.EBlue(this, this.eSecondPos.x, this.eSecondPos.y, 10000);
-    this.enemies.add(this.blue2);
+    this.eRedPos = Pacmaze.TILETOWORLDPOS(this.mapGen.enemyBoxes[1].x, this.mapGen.enemyBoxes[1].y);
+    this.eRed = new Pacmaze.ERed(this, this.eRedPos.x, this.eRedPos.y);
+    this.eRed.setCorner(50, 50);
     
-    this.eThirdPos = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 2, this.mapGen.cageRect.y + 2);
-    this.blue3 = new Pacmaze.EBlue(this, this.eThirdPos.x, this.eThirdPos.y, 17000);
-    this.enemies.add(this.blue3);
+    console.log(this.eRed.targetCorner);
+    this.enemies.add(this.eRed);
     
-    this.eFourthPos = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 4, this.mapGen.cageRect.y + 2);
-    this.blue4 = new Pacmaze.EBlue(this, this.eFourthPos.x, this.eFourthPos.y, 21000);
-    this.enemies.add(this.blue4);
-    
-    this.playerPos = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y + this.mapGen.cageRect.height - 1);
+    this.playerPos;
+    var foundPos = false;
+    while(!foundPos)
+    {
+        var rndX = this.game.rnd.between(0, this.mapGen.mapWidth - 1);
+        var rndY = this.game.rnd.between(0, this.mapGen.mapHeight - 1);
+        var pos = new Phaser.Point(rndX, rndY);
+        
+        if(this.mapGen.map[pos.y][pos.x] === 0)
+        {
+            
+            for(var j = 0; j < this.mapGen.enemyBoxes.length; j++)
+            {
+                var distance = Phaser.Point.distance(pos, this.mapGen.enemyBoxes[j]);
+                console.log(distance);
+                if(distance > 3)
+                {
+                    foundPos = true;
+                    this.playerPos = Pacmaze.TILETOWORLDPOS(pos.x, pos.y);
+                }
+            }
+        }
+    }
+    //this.playerPos = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y + this.mapGen.cageRect.height - 1);
     this.player = new Pacmaze.Player(this, this.playerPos.x, this.playerPos.y);
 };
 
@@ -86,24 +104,6 @@ Pacmaze.Game.prototype.reset = function ()
     this.eBlue.inCage = true;
     this.eBlue.goal = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y);
     this.eBlue.moveTarget.setTo(0, 0);
-    
-    this.blue2.reset(this.eSecondPos.x, this.eSecondPos.y);
-    this.blue2.delay = this.time.now + 10000;
-    this.blue2.inCage = true;
-    this.blue2.goal = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y);
-    this.blue2.moveTarget.setTo(0, 0);
-    
-    this.blue3.reset(this.eThirdPos.x, this.eThirdPos.y);
-    this.blue3.delay = this.time.now + 17000;
-    this.blue3.inCage = true;
-    this.blue3.goal = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y);
-    this.blue3.moveTarget.setTo(0, 0);
-    
-    this.blue4.reset(this.eFourthPos.x, this.eFourthPos.y);
-    this.blue4.delay = this.time.now + 21000;
-    this.blue4.inCage = true;
-    this.blue4.goal = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y);
-    this.blue4.moveTarget.setTo(0, 0);
     
     this.player.reset(this.playerPos.x, this.playerPos.y);
     this.player.currentDirection = 0;

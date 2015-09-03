@@ -15,8 +15,6 @@ Pacmaze.Player = function (game, x, y)
     this.desiredDirection = 0;
     
      this.speed = 2;
-    
-    console.log(this.game.gameInput);
 };
 
 Pacmaze.Player.prototype = Object.create(Phaser.Sprite.prototype);

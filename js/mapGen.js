@@ -15,9 +15,11 @@ Pacmaze.MapGen = function (game)
                       new Phaser.Point(0, -1), new Phaser.Point(-1, 0)];
     
     this.cageRect;
+    
+    this.enemyBoxes = [];
 };
 
-Pacmaze.MapGen.prototype.createMaze = function (width, height)
+Pacmaze.MapGen.prototype.createMaze = function (width, height, totalenemies)
 {
     // the level generation does not work with even sized maps
     if(width % 2 === 0 || height % 2 === 0)
@@ -27,6 +29,7 @@ Pacmaze.MapGen.prototype.createMaze = function (width, height)
     
     this.mapWidth = width;
     this.mapHeight = height;
+    this.totalenemies = totalenemies;
     this.map = [];
     
     for(var column = 0; column < this.mapHeight; column++)
@@ -46,7 +49,7 @@ Pacmaze.MapGen.prototype.createMaze = function (width, height)
     this.connectEdges();
     this.connectDeadEnds();
     this.addExtraConnectors();
-    this.addEnemyBox();
+    this.addEnemyBoxes(totalenemies);
     
     return this.converToCSV(this.map);
 };
@@ -258,6 +261,44 @@ Pacmaze.MapGen.prototype.addEnemyBox = function ()
     }
     
     this.cageRect = new Phaser.Rectangle(xStart, yStart, 7, 5);
+};
+
+Pacmaze.MapGen.prototype.addEnemyBoxes = function (nrOfBoxes)
+{
+    for(var i = 0; i < nrOfBoxes; i++)
+    {
+        var foundPos = false;
+        
+        while(!foundPos)
+        {
+            var rndX = this.game.rnd.between(1, this.mapWidth - 2);
+            var rndY = this.game.rnd.between(1, this.mapHeight - 2);
+            var pos = new Phaser.Point(rndX, rndY);
+            
+            if(this.map[pos.y][pos.x] === 1)
+            {
+                if(this.enemyBoxes.length > 0)
+                {
+                    for(var j = 0; j < this.enemyBoxes.length; j++)
+                    {
+                        var distance = Phaser.Point.distance(pos, this.enemyBoxes[j]);
+                        if(distance > 5)
+                        {
+                            foundPos = true;
+                            this.map[pos.y][pos.x] = 2;
+                            this.enemyBoxes.push(pos);
+                        }
+                    }
+                }
+                else
+                {
+                    foundPos = true;
+                    this.map[pos.y][pos.x] = 2;
+                    this.enemyBoxes.push(pos);
+                }
+            }
+        }
+    }
 };
 
 // this converts the mapArray, which is an array of arrays to a CSV string we can use to load a tilemap
