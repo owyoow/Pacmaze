@@ -282,7 +282,7 @@ Pacmaze.MapGen.prototype.addEnemyBoxes = function (nrOfBoxes)
                     for(var j = 0; j < this.enemyBoxes.length; j++)
                     {
                         var distance = Phaser.Point.distance(pos, this.enemyBoxes[j]);
-                        if(distance > 5)
+                        if(distance > 7)
                         {
                             foundPos = true;
                             this.map[pos.y][pos.x] = 2;

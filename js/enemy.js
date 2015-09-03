@@ -12,15 +12,7 @@ Pacmaze.Enemy = function (game, x, y, sprite)
     
     this.targetCorner = new Phaser.Point(0, 0);
     
-    this.directions = {
-        none: new Phaser.Point(0, 0),
-        left: new Phaser.Point(-1, 0),
-        right: new Phaser.Point(1, 0),
-        up: new Phaser.Point(0, -1),
-        down: new Phaser.Point(0, 1)
-    };
-    
-    this.currentDirection = this.directions.none;
+    this.currentDirection = Pacmaze.DIRECTIONS.none;
     
     this.states = {
         Sleep: 1,

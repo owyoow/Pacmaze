@@ -6,15 +6,13 @@ Pacmaze.Player = function (game, x, y)
     this.game.add.existing(this);
     
     this.anchor.setTo(0.5);
-
     this.moveTarget = new Phaser.Point();
-    this.isMoving = false;
-    
-    // direction 0 = none, 2 = up, 4 = left, 6 = right, 8 = down
-    this.currentDirection = 0;
-    this.desiredDirection = 0;
+
+    this.currentDirection =Pacmaze.DIRECTIONS.none;
+    this.desiredDirection = Pacmaze.DIRECTIONS.none;
     
      this.speed = 2;
+     this.hasMoved = false;
 };
 
 Pacmaze.Player.prototype = Object.create(Phaser.Sprite.prototype);
@@ -22,9 +20,9 @@ Pacmaze.Player.prototype.constructor = Pacmaze.Player;
 
 Pacmaze.Player.prototype.update = function ()
 {
-    this.game.foodGroup.forEach(function(food)
+    this.game.foodGroup.forEachAlive(function(food)
     {
-        if(this.checkOverlap(this, food))
+        if(Pacmaze.RECTSOVERLAP(this, food) && this.hasMoved)
         {
             food.kill();
         }
@@ -33,50 +31,47 @@ Pacmaze.Player.prototype.update = function ()
     
     if(this.game.gameInput.left)
     {
-        if(this.currentDirection === 6) this.moveTarget.setTo(0, 0);
-        this.desiredDirection = 4;
+        if(this.currentDirection === Pacmaze.DIRECTIONS.right) this.moveTarget.setTo(0, 0);
+        this.desiredDirection = Pacmaze.DIRECTIONS.left;
     }
     else if(this.game.gameInput.right)
     {
-        if(this.currentDirection === 4) this.moveTarget.setTo(0, 0);
-        this.desiredDirection = 6;
+        if(this.currentDirection === Pacmaze.DIRECTIONS.left) this.moveTarget.setTo(0, 0);
+        this.desiredDirection = Pacmaze.DIRECTIONS.right;
     }
     else if(this.game.gameInput.up)
     {
-        if(this.currentDirection === 8) this.moveTarget.setTo(0, 0);
-        this.desiredDirection = 2;
+        if(this.currentDirection === Pacmaze.DIRECTIONS.down) this.moveTarget.setTo(0, 0);
+        this.desiredDirection = Pacmaze.DIRECTIONS.up;
     }
     else if(this.game.gameInput.down)
     {
-        if(this.currentDirection === 2) this.moveTarget.setTo(0, 0);
-        this.desiredDirection = 8;
+        if(this.currentDirection === Pacmaze.DIRECTIONS.up) this.moveTarget.setTo(0, 0);
+        this.desiredDirection = Pacmaze.DIRECTIONS.down;
     }
     
     if(this.moveTarget.isZero())
     {
-        this.isMoving = false;
         var target = null;
-        if(this.currentDirection !== 0)
+        if(this.currentDirection !== Pacmaze.DIRECTIONS.none)
         {
-            
             if(this.desiredDirection === this.currentDirection)
             {
-                target = this.getNextMoveTarget(this.currentDirection);
                 
+                target = this.getNextMoveTarget(this.game.map, this.currentDirection);
                 if(target !== null)
                 {
                     this.moveTarget = target;
                 }
                 else
                 {
-                    this.currentDirection = 0;
-                    this.desiredDirection = 0;
+                    this.currentDirection = Pacmaze.DIRECTIONS.none;
+                    this.desiredDirection = Pacmaze.DIRECTIONS.none;
                 }
             }
             else
             {
-                target = this.getNextMoveTarget(this.desiredDirection);
-                
+                target = this.getNextMoveTarget(this.game.map, this.desiredDirection);
                 if(target !== null)
                 {
                     this.moveTarget = target;
@@ -84,7 +79,7 @@ Pacmaze.Player.prototype.update = function ()
                 }
                 else
                 {
-                    target = this.getNextMoveTarget(this.currentDirection);
+                    target = this.getNextMoveTarget(this.game.map, this.currentDirection);
                     
                     if(target !== null)
                     {
@@ -93,47 +88,35 @@ Pacmaze.Player.prototype.update = function ()
                     }
                     else
                     {
-                        this.currentDirection = 0;
-                        this.desiredDirection = 0;
+                        this.currentDirection = Pacmaze.DIRECTIONS.none;
+                        this.desiredDirection = Pacmaze.DIRECTIONS.none;
                     }
                 }
             }
         }
         else
         {
-            if(this.desiredDirection === 0) return;
+            if(this.desiredDirection ===Pacmaze.DIRECTIONS.none) return;
             
-            target = this.getNextMoveTarget(this.desiredDirection);
+            target = this.getNextMoveTarget(this.game.map, this.desiredDirection);
             if(target !== null)
             {
+                if(!this.hasMoved) this.hasMoved = true;
+                
                 this.moveTarget = target;
                 this.currentDirection = this.desiredDirection;
             }
             else
             {
-                this.desiredDirection = 0;
+                this.desiredDirection = Pacmaze.DIRECTIONS.none;
             }
         }
     }
     else
     {
-        this.isMoving = true;
-        if(this.currentDirection === 4)
-        {
-            this.x -= this.speed;
-        }
-        else if(this.currentDirection === 6)
-        {
-            this.x += this.speed;
-        }
-        else if(this.currentDirection === 2)
-        {
-            this.y -= this.speed;
-        }
-        else if(this.currentDirection === 8)
-        {
-            this.y += this.speed;
-        }
+        this.x += this.currentDirection.x * this.speed;
+        this.y += this.currentDirection.y * this.speed;
+
         var distance = Phaser.Point.distance(this.position, this.moveTarget);
 
         if(distance < this.speed)
@@ -145,52 +128,28 @@ Pacmaze.Player.prototype.update = function ()
     }
 };
 
-Pacmaze.Player.prototype.getNextMoveTarget = function (direction)
+Pacmaze.Player.prototype.canMove = function (map, currentTile, direction)
 {
-    var tile = this.game.map.getTileWorldXY(this.x, this.y);
+    var canMove = false;
+    var targetTile = map.getTile(currentTile.x + direction.x, currentTile.y + direction.y);
+    
+    if(targetTile && targetTile.index === 0)
+    {
+        canMove = true;
+    }
+    
+    return canMove;
+};
 
+Pacmaze.Player.prototype.getNextMoveTarget = function (map, direction)
+{
     var nextTarget = null;
-    var nextTile;
-    if(direction === 4)
+    var currentTile = map.getTileWorldXY(this.x, this.y);
+    
+    if(this.canMove(map, currentTile, direction))
     {
-        if(this.game.mapGen.map[tile.y][tile.x - 1] === 0)
-        {
-            nextTile = this.game.map.getTileLeft(0, tile.x, tile.y);
-            nextTarget = Pacmaze.TILETOWORLDPOS(nextTile.x, nextTile.y);
-        }
-    }
-    else if(direction === 6)
-    {
-        if(this.game.mapGen.map[tile.y][tile.x + 1] === 0)
-        {
-            nextTile = this.game.map.getTileRight(0, tile.x, tile.y);
-            nextTarget = Pacmaze.TILETOWORLDPOS(nextTile.x, nextTile.y);
-        }
-    }
-    else if(direction === 2)
-    {
-        if(this.game.mapGen.map[tile.y - 1][tile.x] === 0)
-        {
-            nextTile = this.game.map.getTileAbove(0, tile.x, tile.y);
-            nextTarget = Pacmaze.TILETOWORLDPOS(nextTile.x, nextTile.y);
-        }
-    }
-    else if(direction === 8)
-    {
-        if(this.game.mapGen.map[tile.y + 1][tile.x] === 0)
-        {
-            nextTile = this.game.map.getTileBelow(0, tile.x, tile.y);
-            nextTarget = Pacmaze.TILETOWORLDPOS(nextTile.x, nextTile.y);
-        }
+        nextTarget = Pacmaze.TILETOWORLDPOS(currentTile.x + direction.x, currentTile.y + direction.y);
     }
     
     return nextTarget;
-};
-
-Pacmaze.Player.prototype.checkOverlap = function (spriteA, spriteB)
-{
-    var boundsA = spriteA.getBounds();
-    var boundsB = spriteB.getBounds();
-
-    return Phaser.Rectangle.intersects(boundsA, boundsB);  
 };

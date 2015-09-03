@@ -149,7 +149,7 @@ Pacmaze.EBlue.prototype.update = function ()
 Pacmaze.EBlue.prototype.getNextMoveTarget = function (direction)
 {
     var tile = this.game.map.getTileWorldXY(this.x, this.y);
-
+    
     var nextTarget = null;
     var nextTile;
     if(direction === 4)

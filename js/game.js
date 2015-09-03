@@ -30,9 +30,8 @@ Pacmaze.Game.prototype.create = function ()
     {
         for(var row = 0; row < this.mapGen.mapWidth; row++)
         {
-            // checking if the tile is a floor tile and if it is not inside the enemy cage
-            if(this.mapGen.map[column][row] === 0)// && (row < this.mapGen.cageRect.x + 1 || row > this.mapGen.cageRect.x + this.mapGen.cageRect.width - 2 ||
-             // column < this.mapGen.cageRect.y + 1 || column > this.mapGen.cageRect.y + this.mapGen.cageRect.height - 2))
+            // checking if the tile is a floor tile
+            if(this.mapGen.map[column][row] === 0)
             {
                 var foodPos = Pacmaze.TILETOWORLDPOS(row, column);
                 var food = this.add.sprite(foodPos.x, foodPos.y, 'food');
@@ -43,53 +42,49 @@ Pacmaze.Game.prototype.create = function ()
     }
     
     this.enemies = this.add.group();
-    // this.eFirstPos = Pacmaze.TILETOWORLDPOS(this.mapGen.enemyBoxes[0].x, this.mapGen.enemyBoxes[0].y);
-    // this.eBlue = new Pacmaze.EBlue(this, this.eFirstPos.x, this.eFirstPos.y, 1000);
-    // this.enemies.add(this.eBlue);
     
     this.eRedPos = Pacmaze.TILETOWORLDPOS(this.mapGen.enemyBoxes[1].x, this.mapGen.enemyBoxes[1].y);
     this.eRed = new Pacmaze.ERed(this, this.eRedPos.x, this.eRedPos.y);
     this.eRed.setCorner(50, 50);
     
-    console.log(this.eRed.targetCorner);
     this.enemies.add(this.eRed);
     
     this.playerPos;
     var foundPos = false;
+    var pos;
     while(!foundPos)
     {
         var rndX = this.game.rnd.between(0, this.mapGen.mapWidth - 1);
         var rndY = this.game.rnd.between(0, this.mapGen.mapHeight - 1);
-        var pos = new Phaser.Point(rndX, rndY);
+        pos = new Phaser.Point(rndX, rndY);
         
         if(this.mapGen.map[pos.y][pos.x] === 0)
         {
-            
+            foundPos = true;
             for(var j = 0; j < this.mapGen.enemyBoxes.length; j++)
             {
                 var distance = Phaser.Point.distance(pos, this.mapGen.enemyBoxes[j]);
-                console.log(distance);
-                if(distance > 3)
+
+                if(distance < 7)
                 {
-                    foundPos = true;
-                    this.playerPos = Pacmaze.TILETOWORLDPOS(pos.x, pos.y);
+                    foundPos = false;
                 }
             }
         }
     }
-    //this.playerPos = Pacmaze.TILETOWORLDPOS(this.mapGen.cageRect.x + 3, this.mapGen.cageRect.y + this.mapGen.cageRect.height - 1);
+    this.playerPos = Pacmaze.TILETOWORLDPOS(pos.x, pos.y);
     this.player = new Pacmaze.Player(this, this.playerPos.x, this.playerPos.y);
 };
 
 Pacmaze.Game.prototype.update = function ()
 {
-    this.enemies.forEach(function(enemy)
-    {
-        if(this.checkOverlap(this.player, enemy))
-        {
-            this.reset();
-        }
-    }, this);
+    // this.enemies.forEach(function(enemy)
+    // {
+    //     if(this.checkOverlap(this.player, enemy))
+    //     {
+    //         this.reset();
+    //     }
+    // }, this);
 };
 
 Pacmaze.Game.prototype.render = function ()
